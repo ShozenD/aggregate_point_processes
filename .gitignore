@@ -204,3 +204,9 @@ __marimo__/
 
 # Ignore asdf
 .tool-versions
+
+# Ignore macOS system files
+*.DS_Store
+
+# Ignore figures
+figures/*

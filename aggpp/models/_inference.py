@@ -71,3 +71,24 @@ def posterior_predictive_svi(
 ) -> dict[str, jax.Array]:
     predictive = Predictive(model, guide=guide, params=params, num_samples=num_samples)
     return predictive(prng_key, **model_kwargs)
+  
+def posterior_predictive_mcmc(
+    prng_key,
+    model: callable,
+    mcmc: MCMC,
+    **model_kwargs,
+) -> dict[str, jax.Array]:
+    samples = mcmc.get_samples()
+    predictive = Predictive(model, samples, parallel=True)
+    return predictive(prng_key, **model_kwargs)
+
+def posterior_predictive_svi(
+    prng_key,
+    model: callable,
+    guide: callable,
+    params: dict,
+    num_samples: int = 2000,
+    **model_kwargs,
+) -> dict[str, jax.Array]:
+    predictive = Predictive(model, guide=guide, params=params, num_samples=num_samples)
+    return predictive(prng_key, **model_kwargs)

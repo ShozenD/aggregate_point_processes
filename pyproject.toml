@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aggpp"
+version = "0.1.0"
+description = "Aggregate point process modeling"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Shozen Dan", email = "shozen.dan21@imperial.ac.uk" }
+]
+dependencies = [
+  "numpy",
+  "pandas",
+  "altair",
+  "numpyro",
+  "jax",
+  "pytest"
+]
+
+[project.urls]
+Repository = "https://github.com/ShozenD/aggregate_point_process"
+Issues = "https://github.com/ShozenD/aggregate_point_process/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aggpp"]

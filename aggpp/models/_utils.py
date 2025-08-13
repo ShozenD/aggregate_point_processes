@@ -96,40 +96,63 @@ def create_interval_grid_index_map(intervals_series, grid_start=0, grid_end=None
 
 		return interval_grid_index_map
 
-def create_interval_dict(x: pd.Series):
+def create_interval_dict(x, y=None):
 	"""
 	Create a dictionary mapping interval codes to their corresponding intervals.
 	
 	Parameters
 	----------
-	x : pd.Series
-		A pandas Series containing interval codes.
+	x : pd.Series or list
+		A pandas Series containing interval codes, or a list of left bounds.
+	y : pd.Series or list, optional
+		A pandas Series containing interval codes, or a list of right bounds.
+		If x is a pandas Series, this parameter is ignored.
 	
 	Returns
 	-------
 	dict: A dictionary where the keys are the interval codes and
 				the values are the corresponding intervals.
 	"""
-	codes = x.cat.codes.sort_values().unique()
-	intervals = x.cat.categories
-	return {code: interval for code, interval in zip(codes, intervals)}
+	if isinstance(x, pd.Series) and hasattr(x, 'cat'):
+		# Handle pandas categorical Series with intervals
+		codes = x.cat.codes.sort_values().unique()
+		intervals = x.cat.categories
+		return {code: interval for code, interval in zip(codes, intervals)}
+	elif isinstance(x, list) and isinstance(y, list):
+		# Handle lists of left and right bounds
+		intervals = [pd.Interval(left, right, closed='left') for left, right in zip(x, y)]
+		return {i: interval for i, interval in enumerate(intervals)}
+	else:
+		raise ValueError("Invalid input: provide either a pandas Series with categorical intervals or two lists of bounds")
 
-def find_overlapping_intervals(interval_dict: dict):
+def find_overlap_intervals(interval_dict: dict):
 	"""
 	Find overlapping intervals in a sorted list of intervals.
 
 	Returns
 	-------
 	dict: A dictionary where the keys are the interval codes and
-				the values are lists of interval codes that overlap with the key interval.
+		  the values are lists of interval codes that overlap with the key interval.
+		  If an interval has no overlaps, its value is an empty list.
 	"""
-	overlap_record = {}
-	for i, interval in interval_dict.items():
-		for j, other_interval in interval_dict.items():
-			if i != j and interval.overlaps(other_interval):
-				overlap_record.setdefault(i, []).append(j)
-	 
-	return overlap_record
+	overlap_dict = {}
+	
+	# Initialize all intervals with empty lists
+	for code in interval_dict.keys():
+		overlap_dict[code] = []
+	
+	# Find overlaps between all pairs of intervals
+	interval_items = list(interval_dict.items())
+	for i in range(len(interval_items)):
+		for j in range(i + 1, len(interval_items)):
+			code1, interval1 = interval_items[i]
+			code2, interval2 = interval_items[j]
+			
+			if interval1.overlaps(interval2):
+				overlap_dict[code1].append(code2)
+				overlap_dict[code2].append(code1)
+	
+	return overlap_dict
 
 def create_overlap_weights(interval_dict: dict,
 							 overlap_dict: dict,
